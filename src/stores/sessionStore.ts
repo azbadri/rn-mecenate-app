@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 
-/** Persist key — AsyncStorage hydration добавим позже */
+/** Ключ AsyncStorage для UUID пользователя (Bearer). */
 export const SESSION_USER_ID_KEY = '@mecenate/user_id';
 
 class SessionStore {
