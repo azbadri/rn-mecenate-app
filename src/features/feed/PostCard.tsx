@@ -54,7 +54,7 @@ export function PostCard({ post, theme }: Props) {
               borderRadius: radius.md,
             },
           ]}>
-          <FontAwesome name="lock" size={14} color={c.paidText} style={{ marginRight: spacing.sm }} />
+          <FontAwesome name="lock" size={14} color={colors.paidText} style={{ marginRight: spacing.sm }} />
           <Text style={[typography.caption, { color: colors.paidText, flex: 1 }]}>
             Контент доступен по подписке
           </Text>
@@ -75,15 +75,15 @@ export function PostCard({ post, theme }: Props) {
         />
       ) : null}
 
-      <View style={[styles.metaRow, { padding: s.md, gap: s.lg }]}>
+      <View style={[styles.metaRow, { padding: spacing.md, gap: spacing.lg }]}>
         <View style={styles.metaItem}>
-          <FontAwesome name={post.isLiked ? 'heart' : 'heart-o'} size={16} color={post.isLiked ? c.error : c.iconMuted} />
+          <FontAwesome name={post.isLiked ? 'heart' : 'heart-o'} size={16} color={post.isLiked ? colors.error : colors.iconMuted} />
           <Text style={[typography.meta, { color: colors.textSecondary, marginLeft: spacing.xs }]}>
             {post.likesCount}
           </Text>
         </View>
         <View style={styles.metaItem}>
-          <FontAwesome name="comment-o" size={16} color={c.iconMuted} />
+          <FontAwesome name="comment-o" size={16} color={colors.iconMuted} />
           <Text style={[typography.meta, { color: colors.textSecondary, marginLeft: spacing.xs }]}>
             {post.commentsCount}
           </Text>
