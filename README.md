@@ -2,6 +2,7 @@
 (тестовое задание 1 часть)
 
 Экран ленты для **Mecenate** - сервиса поддержки авторов: пользователь видит посты авторов, на которых подписан. 
+
 Платформы: **iOS и Android** через **React Native** и **Expo**, запуск в **Expo Go**.
 
 ## Реализовано по заданию
@@ -22,7 +23,7 @@
 
 - **Node.js** 20+
 - **npm**
-- На телефоне: [**Expo Go**](https://expo.dev/go)
+- На телефоне: Expo Go
 
 ## Установка и запуск
 
@@ -34,7 +35,8 @@ npm run start
 В терминале Expo отсканировать QR-код в **Expo Go**
 
 Переменные окружения (опционально): скопировать `.env.example` в `.env`
-Нужна **`EXPO_PUBLIC_API_BASE_URL`** - базовый URL API, в коде по дефолту используется `https://k8s.mectest.ru/test-app`.
+Нужна **`EXPO_PUBLIC_API_BASE_URL`** - базовый URL API, 
+в коде по дефолту используется `https://k8s.mectest.ru/test-app`.
 
 
 ## API (Swagger)
