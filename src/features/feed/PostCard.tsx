@@ -12,9 +12,14 @@ import {
 import type { Post } from '@/src/api/types';
 import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFilledIcon';
 import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
-import { PaywallMoneyIcon } from '@/src/components/icons/PaywallMoneyIcon';
 import { palette } from '@/src/globals';
 import type { Theme } from '@/src/theme/tokens';
+
+import {
+  HiddenDonationCallout,
+  HiddenFooterSkeleton,
+  HiddenSubscriptionCallout,
+} from './post-card';
 
 type Props = {
   post: Post;
@@ -23,35 +28,6 @@ type Props = {
 
 const PHOTO_ASPECT = 1;
 const HIDDEN_BLUR = 80;
-
-function HiddenDonationCallout({ accent }: { accent: string }) {
-  return (
-    <View style={styles.donationIconWrap} accessibilityLabel="Контент за донат">
-      <View style={[styles.donationIconOuter, { backgroundColor: accent }]}>
-        <View style={styles.donationIconInner}>
-          <Text style={[styles.donationDollar, { color: accent }]}>$</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function HiddenSubscriptionCallout() {
-  return (
-    <View style={styles.donationIconWrap} accessibilityLabel="Контент по подписке">
-      <PaywallMoneyIcon size={56} />
-    </View>
-  );
-}
-
-function HiddenFooterSkeleton({ barColor }: { barColor: string }) {
-  return (
-    <View style={styles.skeletonBlock}>
-      <View style={[styles.skeletonBar, { width: '40%', height: 26, borderRadius: 22, backgroundColor: barColor }]} />
-      <View style={[styles.skeletonBar, { width: '90%', height: 40, borderRadius: 22, backgroundColor: barColor }]} />
-    </View>
-  );
-}
 
 export function PostCard({ post, theme }: Props) {
   const { colors, spacing, radii: radius } = theme;
@@ -277,29 +253,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 2,
   },
-  donationIconWrap: {
-    marginBottom: 16,
-  },
-  donationIconOuter: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  donationIconInner: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  donationDollar: {
-    fontSize: 18,
-    lineHeight: 20,
-    fontWeight: '800',
-  },
   hiddenLine: {
     color: '#FFFFFF',
     fontSize: 16,
@@ -329,16 +282,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     fontWeight: '700',
-  },
-  skeletonBlock: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    gap: 10,
-  },
-  skeletonBar: {
-    height: 14,
-    borderRadius: 6,
   },
   noCoverPlaceholder: {
     flex: 1,
