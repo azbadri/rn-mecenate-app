@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import type { Post } from '@/src/api/types';
 import type { Theme } from '@/src/theme/tokens';
@@ -9,11 +9,19 @@ type Props = {
   theme: Theme;
 };
 
-const PHOTO_ASPECT = 3 / 3;
+const PHOTO_ASPECT = 1;
+
+const ACTION_PILL_BG_LIGHT = '#EFF2F7';
+const ACTION_PILL_FG_LIGHT = '#57626F';
 
 export function PostCard({ post, theme }: Props) {
   const { colors, spacing, radii: radius, typography } = theme;
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const actionPillBg = isDark ? colors.borderSubtle : ACTION_PILL_BG_LIGHT;
+  const actionPillFg = isDark ? colors.textSecondary : ACTION_PILL_FG_LIGHT;
   const isPaid = post.tier === 'paid';
+  const hasText = Boolean(post.title) || (!isPaid && Boolean(post.preview || post.body));
 
   return (
     <View
@@ -21,37 +29,33 @@ export function PostCard({ post, theme }: Props) {
         styles.card,
         {
           backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          marginHorizontal: spacing.lg,
           marginBottom: spacing.md,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: colors.border,
         },
       ]}>
-      <View style={[styles.authorRow, { padding: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm }]}>
-        <Image
-          source={{ uri: post.author.avatarUrl }}
-          style={[styles.avatar, { borderRadius: radius.pill, backgroundColor: colors.borderSubtle }]}
-        />
-        <Text
-          style={[styles.authorName, typography.authorName, { color: colors.textPrimary, flex: 1 }]}
-          numberOfLines={1}>
-          {post.author.displayName || post.author.username}
-        </Text>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: 12 }}>
+        <View style={styles.authorRow}>
+          <Image
+            source={{ uri: post.author.avatarUrl }}
+            style={[styles.avatar, { borderRadius: radius.pill, backgroundColor: colors.borderSubtle }]}
+          />
+          <Text style={[styles.authorName, { color: colors.textPrimary, flex: 1 }]} numberOfLines={1}>
+            {post.author.displayName || post.author.username}
+          </Text>
+        </View>
       </View>
 
-      <View style={[styles.photoFrame, { backgroundColor: colors.borderSubtle }]}>
+      <View style={[styles.photoFrame, { backgroundColor: colors.borderSubtle, marginTop: spacing.lg }]}>
         {post.coverUrl && !isPaid ? (
-          <Image
-            source={{ uri: post.coverUrl }}
-            style={styles.cover}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: post.coverUrl }} style={styles.cover} resizeMode="cover" />
         ) : null}
         {isPaid ? (
           <View style={[styles.paidOverlay, { backgroundColor: colors.paidSurface }]}>
             <FontAwesome name="lock" size={20} color={colors.paidText} style={{ marginBottom: spacing.sm }} />
-            <Text style={[typography.caption, { color: colors.paidText, textAlign: 'center', paddingHorizontal: spacing.md }]}>
+            <Text
+              style={[
+                typography.caption,
+                { color: colors.paidText, textAlign: 'center', paddingHorizontal: spacing.md },
+              ]}>
               Контент доступен по подписке
             </Text>
           </View>
@@ -63,46 +67,47 @@ export function PostCard({ post, theme }: Props) {
         ) : null}
       </View>
 
-      {post.title ? (
-        <Text
-          style={[
-            styles.title,
-            typography.title,
-            { color: colors.textPrimary, paddingHorizontal: spacing.md, marginTop: spacing.md, marginBottom: spacing.sm },
-          ]}
-          numberOfLines={2}>
-          {post.title}
-        </Text>
+      {hasText ? (
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.sm }}>
+          {post.title ? (
+            <Text style={[styles.postTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+              {post.title}
+            </Text>
+          ) : null}
+
+          {!isPaid && (post.preview || post.body) ? (
+            <Text style={[styles.postBody, { color: colors.textPrimary }]} numberOfLines={4}>
+              {post.preview || post.body}
+            </Text>
+          ) : null}
+        </View>
       ) : null}
 
-      {!isPaid ? (
-        <Text
-          style={[
-            typography.body,
-            { color: colors.textSecondary, paddingHorizontal: spacing.md, marginBottom: spacing.md },
-          ]}
-          numberOfLines={4}>
-          {post.preview || post.body}
-        </Text>
-      ) : null}
-
-      <View style={[styles.metaRow, { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm }]}>
+      <View
+        style={[
+          styles.metaRow,
+          { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: 12, gap: spacing.sm },
+        ]}>
         <View
           style={[
             styles.metaPill,
             {
-              backgroundColor: colors.borderSubtle,
+              backgroundColor: actionPillBg,
               borderRadius: radius.pill,
-              paddingVertical: spacing.sm,
-              paddingHorizontal: spacing.md,
+              paddingVertical: 6,
+              paddingLeft: 6,
+              paddingRight: 12,
+              gap: spacing.xs,
             },
           ]}>
-          <FontAwesome
-            name={post.isLiked ? 'heart' : 'heart-o'}
-            size={14}
-            color={post.isLiked ? colors.error : colors.iconMuted}
-          />
-          <Text style={[typography.meta, { color: colors.textSecondary, marginLeft: spacing.xs }]}>
+          <View style={styles.metaIconBox}>
+            <FontAwesome
+              name={post.isLiked ? 'heart' : 'heart-o'}
+              size={16}
+              color={post.isLiked ? colors.error : actionPillFg}
+            />
+          </View>
+          <Text style={[styles.actionCount, { color: post.isLiked ? colors.error : actionPillFg }]}>
             {post.likesCount}
           </Text>
         </View>
@@ -110,16 +115,18 @@ export function PostCard({ post, theme }: Props) {
           style={[
             styles.metaPill,
             {
-              backgroundColor: colors.borderSubtle,
+              backgroundColor: actionPillBg,
               borderRadius: radius.pill,
-              paddingVertical: spacing.sm,
-              paddingHorizontal: spacing.md,
+              paddingVertical: 6,
+              paddingLeft: 6,
+              paddingRight: 12,
+              gap: spacing.xs,
             },
           ]}>
-          <FontAwesome name="comment-o" size={14} color={colors.iconMuted} />
-          <Text style={[typography.meta, { color: colors.textSecondary, marginLeft: spacing.xs }]}>
-            {post.commentsCount}
-          </Text>
+          <View style={styles.metaIconBox}>
+            <FontAwesome name="comment-o" size={16} color={actionPillFg} />
+          </View>
+          <Text style={[styles.actionCount, { color: actionPillFg }]}>{post.commentsCount}</Text>
         </View>
       </View>
     </View>
@@ -128,18 +135,33 @@ export function PostCard({ post, theme }: Props) {
 
 const styles = StyleSheet.create({
   card: {
+    width: '100%',
     overflow: 'hidden',
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   avatar: {
     width: 40,
     height: 40,
   },
-  authorName: {},
-  title: {},
+  authorName: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
+  },
+  postTitle: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '700',
+  },
+  postBody: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
   photoFrame: {
     width: '100%',
     aspectRatio: PHOTO_ASPECT,
@@ -167,5 +189,17 @@ const styles = StyleSheet.create({
   metaPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 36,
+  },
+  metaIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionCount: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
   },
 });
