@@ -5,4 +5,5 @@ export const palette = {
   'gray-600': '#4A5568',
   'rose-500': '#FF2D6C',
   'violet-500': '#6D28D9',
+  'violet-600': '#6115CD',
 } as const;
