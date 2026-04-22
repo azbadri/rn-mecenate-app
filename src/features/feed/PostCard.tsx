@@ -1,17 +1,51 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
 
 import type { Post } from '@/src/api/types';
+import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFilledIcon';
+import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
+import { palette } from '@/src/globals';
 import type { Theme } from '@/src/theme/tokens';
+
+import {
+  HiddenDonationCallout,
+  HiddenFooterSkeleton,
+  HiddenSubscriptionCallout,
+} from './post-card';
 
 type Props = {
   post: Post;
   theme: Theme;
 };
 
+const PHOTO_ASPECT = 1;
+const HIDDEN_BLUR = 80;
+
 export function PostCard({ post, theme }: Props) {
-  const { colors, spacing, radii: radius, typography } = theme;
+  const { colors, spacing, radii: radius } = theme;
+  const isDark = useColorScheme() === 'dark';
+  const pillNeutralBg = isDark ? colors.borderSubtle : palette['gray-100'];
+  const likeInactiveFg = isDark ? colors.textSecondary : palette['gray-600'];
+  const commentIconFg = isDark ? colors.textSecondary : palette['gray-500'];
+  const brand = palette['violet-500'];
+  const skeletonTrack = isDark ? colors.borderSubtle : palette['gray-100'];
+
+  const likeBg = post.isLiked ? palette['rose-500'] : pillNeutralBg;
+  const likeFg = post.isLiked ? palette.white : likeInactiveFg;
   const isPaid = post.tier === 'paid';
+  const isDonation = post.isContentHidden === true;
+  /** Платные и скрытые по донату — блюр, CTA и скелетон, без превью и actions */
+  const isLocked = isPaid || isDonation;
+  const hasText =
+    !isLocked && (Boolean(post.title) || (!isPaid && Boolean(post.preview || post.body)));
 
   return (
     <View
@@ -19,108 +53,259 @@ export function PostCard({ post, theme }: Props) {
         styles.card,
         {
           backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          marginHorizontal: spacing.lg,
           marginBottom: spacing.md,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: colors.border,
         },
       ]}>
-      <View style={[styles.authorRow, { padding: spacing.md, gap: spacing.sm }]}>
-        <Image
-          source={{ uri: post.author.avatarUrl }}
-          style={[styles.avatar, { borderRadius: radius.pill, backgroundColor: colors.borderSubtle }]}
-        />
-        <Text style={[styles.authorName, typography.authorName, { color: colors.textPrimary, flex: 1 }]} numberOfLines={1}>
-          {post.author.displayName || post.author.username}
-        </Text>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: 12 }}>
+        <View style={styles.authorRow}>
+          <Image
+            source={{ uri: post.author.avatarUrl }}
+            style={[styles.avatar, { borderRadius: radius.pill, backgroundColor: colors.borderSubtle }]}
+          />
+          <Text style={[styles.authorName, { color: colors.textPrimary, flex: 1 }]} numberOfLines={1}>
+            {post.author.displayName || post.author.username}
+          </Text>
+        </View>
       </View>
 
-      {post.title ? (
-        <Text style={[styles.title, typography.title, { color: colors.textPrimary, paddingHorizontal: spacing.md, marginBottom: spacing.sm }]} numberOfLines={2}>
-          {post.title}
-        </Text>
+      <View
+        style={[
+          styles.photoFrame,
+          { backgroundColor: colors.borderSubtle, marginTop: spacing.lg },
+        ]}>
+        {isLocked ? (
+          <>
+            {post.coverUrl ? (
+              <Image source={{ uri: post.coverUrl }} style={styles.cover} resizeMode="cover" />
+            ) : null}
+            {post.coverUrl ? (
+              <BlurView
+                intensity={HIDDEN_BLUR}
+                style={StyleSheet.absoluteFill}
+                tint="dark"
+                experimentalBlurMethod="dimezisBlurView"
+              />
+            ) : null}
+            <View style={[StyleSheet.absoluteFill, styles.hiddenDim]} />
+            <View style={[StyleSheet.absoluteFill, styles.hiddenOverlayCenter, { padding: spacing.lg }]}>
+              {isDonation ? (
+                <HiddenDonationCallout accent={brand} />
+              ) : (
+                <HiddenSubscriptionCallout />
+              )}
+              {isDonation ? (
+                <>
+                  <Text style={styles.hiddenLine}>Контент скрыт пользователем.</Text>
+                  <Text style={styles.hiddenSubline}>Доступ откроется после доната</Text>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.donateButton,
+                      { backgroundColor: brand, opacity: pressed ? 0.9 : 1 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Отправить донат"
+                    onPress={() => {}}>
+                    <Text style={styles.donateButtonText}>Отправить донат</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.hiddenLine}>Контент скрыт пользователем.</Text>
+                  <Text style={styles.hiddenLine}>
+                  Доступ откроется после доната
+                  </Text>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.donateButton,
+                      { backgroundColor: brand, opacity: pressed ? 0.9 : 1, marginTop: spacing.sm },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Отправить донат"
+                    onPress={() => {}}>
+                    <Text style={styles.donateButtonText}>Отправить донат</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </>
+        ) : (
+          <>
+            {post.coverUrl ? (
+              <Image source={{ uri: post.coverUrl }} style={styles.cover} resizeMode="cover" />
+            ) : null}
+            {!post.coverUrl ? (
+              <View style={styles.noCoverPlaceholder}>
+                <FontAwesome name="image" size={32} color={colors.iconMuted} />
+              </View>
+            ) : null}
+          </>
+        )}
+      </View>
+
+      {isLocked ? (
+        <HiddenFooterSkeleton barColor={skeletonTrack} />
+      ) : hasText ? (
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.sm }}>
+          {post.title ? (
+            <Text style={[styles.postTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+              {post.title}
+            </Text>
+          ) : null}
+
+          {!isPaid && (post.preview || post.body) ? (
+            <Text style={[styles.postBody, { color: colors.textPrimary }]} numberOfLines={4}>
+              {post.preview || post.body}
+            </Text>
+          ) : null}
+        </View>
       ) : null}
 
-      {isPaid ? (
+      {isLocked ? null : (
         <View
           style={[
-            styles.paidBox,
-            {
-              marginHorizontal: spacing.md,
-              marginBottom: spacing.md,
-              padding: spacing.md,
-              backgroundColor: colors.paidSurface,
-              borderRadius: radius.md,
-            },
+            styles.metaRow,
+            { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: 12, gap: spacing.sm },
           ]}>
-          <FontAwesome name="lock" size={14} color={colors.paidText} style={{ marginRight: spacing.sm }} />
-          <Text style={[typography.caption, { color: colors.paidText, flex: 1 }]}>
-            Контент доступен по подписке
-          </Text>
+          <View
+            style={[
+              styles.metaPill,
+              {
+                backgroundColor: likeBg,
+                borderRadius: radius.pill,
+                paddingVertical: 6,
+                paddingLeft: 6,
+                paddingRight: 12,
+                gap: spacing.xs,
+              },
+            ]}>
+            <View style={styles.metaIconBox}>
+              <HeartLikeFilledIcon color={likeFg} size={16} />
+            </View>
+            <Text style={[styles.actionCount, { color: likeFg }]}>{post.likesCount}</Text>
+          </View>
+          <View
+            style={[
+              styles.metaPill,
+              {
+                backgroundColor: pillNeutralBg,
+                borderRadius: radius.pill,
+                paddingVertical: 6,
+                paddingLeft: 6,
+                paddingRight: 12,
+                gap: spacing.xs,
+              },
+            ]}>
+            <View style={styles.metaIconBox}>
+              <CommentBubbleFilledIcon color={commentIconFg} size={16} />
+            </View>
+            <Text style={[styles.actionCount, { color: commentIconFg }]}>{post.commentsCount}</Text>
+          </View>
         </View>
-      ) : (
-        <Text
-          style={[typography.body, { color: colors.textSecondary, paddingHorizontal: spacing.md, marginBottom: spacing.md }]}
-          numberOfLines={4}>
-          {post.preview || post.body}
-        </Text>
       )}
-
-      {post.coverUrl ? (
-        <Image
-          source={{ uri: post.coverUrl }}
-          style={[styles.cover, { backgroundColor: colors.borderSubtle }]}
-          resizeMode="cover"
-        />
-      ) : null}
-
-      <View style={[styles.metaRow, { padding: spacing.md, gap: spacing.lg }]}>
-        <View style={styles.metaItem}>
-          <FontAwesome name={post.isLiked ? 'heart' : 'heart-o'} size={16} color={post.isLiked ? colors.error : colors.iconMuted} />
-          <Text style={[typography.meta, { color: colors.textSecondary, marginLeft: spacing.xs }]}>
-            {post.likesCount}
-          </Text>
-        </View>
-        <View style={styles.metaItem}>
-          <FontAwesome name="comment-o" size={16} color={colors.iconMuted} />
-          <Text style={[typography.meta, { color: colors.textSecondary, marginLeft: spacing.xs }]}>
-            {post.commentsCount}
-          </Text>
-        </View>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    width: '100%',
     overflow: 'hidden',
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   avatar: {
     width: 40,
     height: 40,
   },
-  authorName: {},
-  title: {},
-  paidBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  authorName: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
+  },
+  postTitle: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '700',
+  },
+  postBody: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  photoFrame: {
+    width: '100%',
+    aspectRatio: PHOTO_ASPECT,
+    overflow: 'hidden',
   },
   cover: {
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
-    aspectRatio: 16 / 9,
+    height: '100%',
+  },
+  hiddenDim: {
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+  },
+  hiddenOverlayCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  hiddenLine: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  hiddenSubline: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  donateButton: {
+    width: 240,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
+  },
+  noCoverPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  metaItem: {
+  metaPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 36,
+  },
+  metaIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionCount: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
   },
 });
