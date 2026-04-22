@@ -24,6 +24,7 @@ export type Post = {
   isLiked: boolean;
   tier: PostTier;
   createdAt: string;
+  isContentHidden?: boolean;
 };
 
 export type PostsFeedData = {
