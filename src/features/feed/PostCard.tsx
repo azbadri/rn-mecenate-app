@@ -2,6 +2,9 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import type { Post } from '@/src/api/types';
+import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFilledIcon';
+import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
+import { palette } from '@/src/globals';
 import type { Theme } from '@/src/theme/tokens';
 
 type Props = {
@@ -11,15 +14,15 @@ type Props = {
 
 const PHOTO_ASPECT = 1;
 
-const ACTION_PILL_BG_LIGHT = '#EFF2F7';
-const ACTION_PILL_FG_LIGHT = '#57626F';
-
 export function PostCard({ post, theme }: Props) {
   const { colors, spacing, radii: radius, typography } = theme;
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
-  const actionPillBg = isDark ? colors.borderSubtle : ACTION_PILL_BG_LIGHT;
-  const actionPillFg = isDark ? colors.textSecondary : ACTION_PILL_FG_LIGHT;
+  const isDark = useColorScheme() === 'dark';
+  const pillNeutralBg = isDark ? colors.borderSubtle : palette['gray-100'];
+  const likeInactiveFg = isDark ? colors.textSecondary : palette['gray-600'];
+  const commentIconFg = isDark ? colors.textSecondary : palette['gray-500'];
+
+  const likeBg = post.isLiked ? palette['rose-500'] : pillNeutralBg;
+  const likeFg = post.isLiked ? palette.white : likeInactiveFg;
   const isPaid = post.tier === 'paid';
   const hasText = Boolean(post.title) || (!isPaid && Boolean(post.preview || post.body));
 
@@ -92,7 +95,7 @@ export function PostCard({ post, theme }: Props) {
           style={[
             styles.metaPill,
             {
-              backgroundColor: actionPillBg,
+              backgroundColor: likeBg,
               borderRadius: radius.pill,
               paddingVertical: 6,
               paddingLeft: 6,
@@ -101,21 +104,15 @@ export function PostCard({ post, theme }: Props) {
             },
           ]}>
           <View style={styles.metaIconBox}>
-            <FontAwesome
-              name={post.isLiked ? 'heart' : 'heart-o'}
-              size={16}
-              color={post.isLiked ? colors.error : actionPillFg}
-            />
+            <HeartLikeFilledIcon color={likeFg} size={16} />
           </View>
-          <Text style={[styles.actionCount, { color: post.isLiked ? colors.error : actionPillFg }]}>
-            {post.likesCount}
-          </Text>
+          <Text style={[styles.actionCount, { color: likeFg }]}>{post.likesCount}</Text>
         </View>
         <View
           style={[
             styles.metaPill,
             {
-              backgroundColor: actionPillBg,
+              backgroundColor: pillNeutralBg,
               borderRadius: radius.pill,
               paddingVertical: 6,
               paddingLeft: 6,
@@ -124,9 +121,9 @@ export function PostCard({ post, theme }: Props) {
             },
           ]}>
           <View style={styles.metaIconBox}>
-            <FontAwesome name="comment-o" size={16} color={actionPillFg} />
+            <CommentBubbleFilledIcon color={commentIconFg} size={16} />
           </View>
-          <Text style={[styles.actionCount, { color: actionPillFg }]}>{post.commentsCount}</Text>
+          <Text style={[styles.actionCount, { color: commentIconFg }]}>{post.commentsCount}</Text>
         </View>
       </View>
     </View>
