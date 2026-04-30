@@ -95,7 +95,7 @@ export async function fetchPostsPage(
   }
 
   if (json.data == null) {
-    throw new ApiClientError('Пустой data в ответе', res.status, json);
+    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
   }
 
   return json.data;
