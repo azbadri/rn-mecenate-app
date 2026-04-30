@@ -13,7 +13,7 @@ export function FeedError({ theme, onRetry }: Props) {
     <View style={{ flex: 1, justifyContent: 'center' }}>
       <EmptyStateCenteredWithInsets
         theme={theme}
-        message="Не удалось загрузить публикации"
+        message="Не удалось загрузить ленту"
         actionLabel="Повторить"
         onAction={onRetry}
       />

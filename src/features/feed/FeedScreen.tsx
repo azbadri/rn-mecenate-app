@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { observer } from 'mobx-react-lite';
 
 import type { Post } from '@/src/api/types';
 import { usePostsFeed } from '@/src/hooks/usePostsFeed';
@@ -57,7 +58,7 @@ function FeedTopTabsPlaceholder() {
   );
 }
 
-export function FeedScreen() {
+export const FeedScreen = observer(function FeedScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const {
@@ -150,7 +151,7 @@ export function FeedScreen() {
       />
     </SafeAreaView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   flex: {
