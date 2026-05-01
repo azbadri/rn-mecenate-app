@@ -15,6 +15,7 @@ export const palette = {
   gray900: '#111827',
   blue500: '#2563EB',
   blue100: '#DBEAFE',
+  violet500: '#6115CD',
   red500: '#DC2626',
 } as const;
 
@@ -78,6 +79,7 @@ const lightColors = {
   border: palette.gray200,
   borderSubtle: palette.gray100,
   accent: palette.blue500,
+  accentViolet: palette.violet500,
   accentMuted: palette.blue100,
   error: palette.red500,
   /** Оверлей на обложке / dim */
@@ -100,6 +102,7 @@ const darkColors = {
   border: '#27272A',
   borderSubtle: '#1F1F23',
   accent: '#60A5FA',
+  accentViolet: '#6115CD',
   accentMuted: '#1E3A5F',
   error: '#F87171',
   scrim: 'rgba(0, 0, 0, 0.55)',
