@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,13 +14,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
 
 import type { Comment } from '@/src/api/types';
+import { QueryNotFoundView } from '@/src/components/empty-states/QueryNotFoundView';
 import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFilledIcon';
 import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
-import { QueryNotFoundView } from '@/src/components/empty-states/QueryNotFoundView';
 import { palette } from '@/src/globals';
 import { usePostComments } from '@/src/hooks/usePostComments';
 import { usePostDetail } from '@/src/hooks/usePostDetail';
@@ -110,9 +110,7 @@ export function PostDetailScreen() {
           onPress={() => router.back()}
           accessibilityRole="button"
           accessibilityLabel="Назад">
-          <Text style={[styles.backText, { color: theme.colors.textSecondary }]}>Назад</Text>
         </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Детальный пост</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -195,10 +193,10 @@ export function PostDetailScreen() {
               </View>
 
               <View style={styles.commentsHeader}>
-                <Text style={[styles.commentsTitle, { color: theme.colors.textPrimary }]}>
+                <Text style={[styles.commentsTitle, { color: theme.colors.textSubtle, fontFamily: 'manrope', fontWeight: '600'}]}>
                   {commentCountLabel}
                 </Text>
-                <Text style={[styles.commentsSort, { color: theme.colors.accent }]}>
+                <Text style={[styles.commentsSort, { color: theme.colors.accentViolet, fontFamily: 'manrope', fontWeight: '600' }]}>
                   Сначала новые
                 </Text>
               </View>
@@ -281,7 +279,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
     justifyContent: 'space-between',
   },
   backText: {
@@ -306,7 +303,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   avatar: {
     width: 36,
@@ -356,7 +353,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 8,
   },
   commentsTitle: {
     fontSize: 14,
