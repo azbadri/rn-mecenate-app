@@ -26,6 +26,7 @@ import { usePostDetail } from '@/src/hooks/usePostDetail';
 import { useCreatePostComment, useTogglePostLike } from '@/src/hooks/usePostMutations';
 import { usePostRealtime } from '@/src/hooks/usePostRealtime';
 import { useAppTheme } from '@/src/theme/useAppTheme';
+import { getRussianPlural } from '@/src/utils/pluralize';
 import { PostCommentItem } from './PostCommentItem';
 
 const INPUT_BAR_HEIGHT = 56;
@@ -72,7 +73,8 @@ export function PostDetailScreen() {
 
   const commentCountLabel = useMemo(() => {
     const count = post?.commentsCount ?? comments.length;
-    return `${count} комментария`;
+    const suffix = getRussianPlural(count, 'комментарий', 'комментария', 'комментариев');
+    return `${count} ${suffix}`;
   }, [comments.length, post?.commentsCount]);
 
   useEffect(() => {
