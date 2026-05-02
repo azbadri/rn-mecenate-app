@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { useCallback, useMemo } from 'react';
 import {
@@ -10,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
 import type { Post } from '@/src/api/types';
 import { usePostsFeed } from '@/src/hooks/usePostsFeed';
@@ -54,16 +54,23 @@ export const FeedScreen = observer(function FeedScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderItem: ListRenderItem<Post> = useCallback(
-    ({ item }) => (
-      <Pressable
-        onPress={() =>
-          router.push({ pathname: '/post/[id]', params: { id: item.id } } as never)
-        }
-        accessibilityRole="button"
-        accessibilityLabel="Открыть публикацию">
-        <PostCard post={item} theme={theme} />
-      </Pressable>
-    ),
+    ({ item }) => {
+      const isPaid = item.tier === 'paid';
+      const onPress = () => {
+        if (isPaid) return;
+        router.push({ pathname: '/post/[id]', params: { id: item.id } });
+      };
+
+      return (
+        <Pressable
+          onPress={onPress}
+          disabled={isPaid}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть публикацию">
+          <PostCard post={item} theme={theme} />
+        </Pressable>
+      );
+    },
     [router, theme],
   );
 

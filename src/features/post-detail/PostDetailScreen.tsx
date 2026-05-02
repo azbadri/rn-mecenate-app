@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -92,7 +93,12 @@ export function PostDetailScreen() {
     return <QueryNotFoundView theme={theme} onGoHome={() => router.replace('/(tabs)')} />;
   }
 
-  const likeColor = post.isLiked ? palette['rose-500'] : theme.colors.textSecondary;
+  const isDark = useColorScheme() === 'dark';
+  const pillNeutralBg = isDark ? theme.colors.borderSubtle : palette['gray-100'];
+  const likeInactiveFg = isDark ? theme.colors.textSecondary : palette['gray-600'];
+  const commentIconFg = isDark ? theme.colors.textSecondary : palette['gray-500'];
+  const likeBg = post.isLiked ? palette['rose-500'] : pillNeutralBg;
+  const likeFg = post.isLiked ? palette.white : likeInactiveFg;
   const sendDisabled = commentText.trim().length === 0 || createCommentMutation.isPending;
   const onSubmitComment = () => {
     const trimmed = commentText.trim();
@@ -178,15 +184,19 @@ export function PostDetailScreen() {
               <View style={styles.metaRow}>
                 <Pressable
                   onPress={() => toggleLikeMutation.mutate()}
-                  style={styles.metaPill}
+                  style={[styles.metaPill, { backgroundColor: likeBg }]}
                   accessibilityRole="button"
                   accessibilityLabel="Лайк">
-                  <HeartLikeFilledIcon color={likeColor} size={18} />
-                  <Text style={[styles.metaCount, { color: likeColor }]}>{post.likesCount}</Text>
+                  <View style={styles.metaIconBox}>
+                    <HeartLikeFilledIcon color={likeFg} size={16} />
+                  </View>
+                  <Text style={[styles.actionCount, { color: likeFg }]}>{post.likesCount}</Text>
                 </Pressable>
-                <View style={styles.metaPill}>
-                  <CommentBubbleFilledIcon color={theme.colors.textSecondary} size={18} />
-                  <Text style={[styles.metaCount, { color: theme.colors.textSecondary }]}>
+                <View style={[styles.metaPill, { backgroundColor: pillNeutralBg }]}>
+                  <View style={styles.metaIconBox}>
+                    <CommentBubbleFilledIcon color={commentIconFg} size={16} />
+                  </View>
+                  <Text style={[styles.actionCount, { color: commentIconFg }]}>
                     {post.commentsCount}
                   </Text>
                 </View>
@@ -339,15 +349,25 @@ const styles = StyleSheet.create({
   metaPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: 'transparent',
+    minWidth: 63,
+    height: 36,
+    gap: 4,
+    paddingTop: 6,
+    paddingRight: 12,
+    paddingBottom: 6,
+    paddingLeft: 6,
+    borderRadius: 9999,
   },
-  metaCount: {
+  metaIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionCount: {
     fontSize: 13,
-    fontWeight: '600',
+    lineHeight: 18,
+    fontWeight: '700',
   },
   commentsHeader: {
     flexDirection: 'row',
