@@ -53,6 +53,7 @@ export function PostDetailScreen() {
 
   const toggleLikeMutation = useTogglePostLike(id);
   const createCommentMutation = useCreatePostComment(id);
+  const isDark = useColorScheme() === 'dark';
 
   usePostRealtime(id, queryClient);
 
@@ -93,7 +94,6 @@ export function PostDetailScreen() {
     return <QueryNotFoundView theme={theme} onGoHome={() => router.replace('/(tabs)')} />;
   }
 
-  const isDark = useColorScheme() === 'dark';
   const pillNeutralBg = isDark ? theme.colors.borderSubtle : palette['gray-100'];
   const likeInactiveFg = isDark ? theme.colors.textSecondary : palette['gray-600'];
   const commentIconFg = isDark ? theme.colors.textSecondary : palette['gray-500'];
@@ -167,7 +167,9 @@ export function PostDetailScreen() {
               </View>
 
               {post.coverUrl ? (
-                <Image source={{ uri: post.coverUrl }} style={styles.cover} resizeMode="cover" />
+                <View style={styles.coverWrapper}>
+                  <Image source={{ uri: post.coverUrl }} style={styles.cover} resizeMode="cover" />
+                </View>
               ) : null}
 
               <View style={styles.textBlock}>
@@ -325,8 +327,11 @@ const styles = StyleSheet.create({
   },
   cover: {
     width: '100%',
-    height: 240,
-    borderRadius: 12,
+    aspectRatio: 1,
+    borderRadius: 0,
+  },
+  coverWrapper: {
+    marginHorizontal: -16,
   },
   textBlock: {
     paddingTop: 12,
