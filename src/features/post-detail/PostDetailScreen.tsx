@@ -20,6 +20,7 @@ import type { Comment } from '@/src/api/types';
 import { QueryNotFoundView } from '@/src/components/empty-states/QueryNotFoundView';
 import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFilledIcon';
 import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
+import { SendPlaneIcon } from '@/src/components/icons/SendPlaneIcon';
 import { palette } from '@/src/globals';
 import { usePostComments } from '@/src/hooks/usePostComments';
 import { usePostDetail } from '@/src/hooks/usePostDetail';
@@ -81,7 +82,7 @@ export function PostDetailScreen() {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showSub = Keyboard.addListener(showEvent, (event) => {
-      setKeyboardHeight(event.endCoordinates.height);
+      setKeyboardHeight(event.endCoordinates.height + 10);
     });
     const hideSub = Keyboard.addListener(hideEvent, () => {
       setKeyboardHeight(0);
@@ -232,7 +233,7 @@ export function PostDetailScreen() {
                   <Text
                     style={[
                       styles.commentsSort,
-                      { color: theme.colors.accentViolet, fontFamily: 'manrope', fontWeight: '600' },
+                      { color: theme.colors.accentViolet, fontFamily: 'manrope', fontWeight: '500' },
                     ]}>
                     {commentsOrder === 'new' ? 'Сначала новые' : 'Сначала старые'}
                   </Text>
@@ -275,8 +276,10 @@ export function PostDetailScreen() {
               styles.input,
               {
                 color: theme.colors.textPrimary,
-                borderColor: theme.colors.borderSubtle,
-                backgroundColor: theme.colors.background,
+                // borderColor: theme.colors.borderSubtle,
+                // backgroundColor: theme.colors.background,
+                borderColor: theme.colors.background,
+                borderWidth: 2,
                 borderRadius: theme.radii.lg,
                 paddingHorizontal: theme.spacing.md,
                 paddingVertical: theme.spacing.sm,
@@ -291,11 +294,11 @@ export function PostDetailScreen() {
             style={({ pressed }) => [
               styles.sendButton,
               {
-                backgroundColor: theme.colors.accent,
                 opacity: sendDisabled ? 0.5 : pressed ? 0.85 : 1,
+                color: sendDisabled ? theme.colors.accentViolet : theme.colors.iconMuted,
               },
             ]}>
-            <Text style={styles.sendButtonText}>Отправить</Text>
+            <SendPlaneIcon />
           </Pressable>
         </View>
       </View>
@@ -344,8 +347,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   avatar: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
   },
   authorName: {
     fontSize: 16,
@@ -405,6 +408,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: -10,
   },
   commentsTitle: {
     fontSize: 14,
@@ -437,10 +441,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 16,
-  },
-  sendButtonText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
   },
 });

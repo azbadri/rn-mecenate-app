@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   topTabButton: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 38,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,

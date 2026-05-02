@@ -34,7 +34,7 @@ export function PostCommentItem({ comment, liked, likeCount, onToggleLike }: Pro
         <Text style={[styles.author, { color: theme.colors.textPrimary }]}>
           {comment.author.displayName || comment.author.username}
         </Text>
-        <Text style={[styles.text, { color: theme.colors.textSecondary }]}>{comment.text}</Text>
+        <Text style={[styles.text, { color: theme.colors.textPrimary }]}>{comment.text}</Text>
       </View>
       <Pressable
         onPress={() => onToggleLike(comment.id)}
@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   avatar: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
   },
   body: {
     flex: 1,

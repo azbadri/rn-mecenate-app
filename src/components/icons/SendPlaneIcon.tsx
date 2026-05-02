@@ -1,0 +1,22 @@
+import Svg, { Path } from 'react-native-svg';
+
+type Props = {
+  color?: string;
+  size?: number;
+};
+
+const VIEW_W = 20;
+const VIEW_H = 17;
+
+const SEND_PATH =
+  'M2.05266 0.126289C0.778242 -0.42669 -0.477861 0.942939 0.181319 2.16608L2.71916 6.87922C2.88029 7.18317 3.18059 7.38459 3.52116 7.42853L9.96647 8.2342C10.091 8.24885 10.1862 8.35505 10.1862 8.47956C10.1862 8.60407 10.091 8.71027 9.96647 8.72492L3.52116 9.53059C3.18059 9.57453 2.88029 9.77961 2.71916 10.0799L0.181319 14.8004C-0.477861 16.0235 0.778242 17.3931 2.05266 16.8402L18.2355 9.82722C19.4111 9.31818 19.4111 7.64826 18.2355 7.13923L2.05266 0.126289Z';
+
+export function SendPlaneIcon({ color = '#D5C9FF', size = 20 }: Props) {
+  const w = size;
+  const h = (size * VIEW_H) / VIEW_W;
+  return (
+    <Svg width={w} height={h} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} accessible={false}>
+      <Path d={SEND_PATH} fill={color} />
+    </Svg>
+  );
+}
