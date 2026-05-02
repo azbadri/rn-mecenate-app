@@ -68,8 +68,9 @@ const styles = StyleSheet.create({
   topTabsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 4,
+    padding: 0,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   topTabButton: {
     flex: 1,

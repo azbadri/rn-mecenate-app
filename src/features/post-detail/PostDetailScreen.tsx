@@ -26,6 +26,7 @@ import { usePostDetail } from '@/src/hooks/usePostDetail';
 import { useCreatePostComment, useTogglePostLike } from '@/src/hooks/usePostMutations';
 import { usePostRealtime } from '@/src/hooks/usePostRealtime';
 import { useAppTheme } from '@/src/theme/useAppTheme';
+import { PostCommentItem } from './PostCommentItem';
 
 const INPUT_BAR_HEIGHT = 56;
 
@@ -37,6 +38,9 @@ export function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const [commentText, setCommentText] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [commentsOrder, setCommentsOrder] = useState<'new' | 'old'>('new');
+  const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
+  const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
 
   const {
     data: post,
@@ -61,6 +65,10 @@ export function PostDetailScreen() {
     () => commentsData?.pages.flatMap((page) => page.comments) ?? [],
     [commentsData],
   );
+  const sortedComments = useMemo(() => {
+    if (commentsOrder === 'new') return comments;
+    return [...comments].reverse();
+  }, [comments, commentsOrder]);
 
   const commentCountLabel = useMemo(() => {
     const count = post?.commentsCount ?? comments.length;
@@ -108,6 +116,18 @@ export function PostDetailScreen() {
     });
   };
 
+  const onToggleCommentLike = (commentId: string) => {
+    setCommentLikes((prevLikes) => {
+      const nextLiked = !prevLikes[commentId];
+      setCommentLikeCounts((prevCounts) => {
+        const current = prevCounts[commentId] ?? 0;
+        const nextValue = nextLiked ? current + 1 : Math.max(0, current - 1);
+        return { ...prevCounts, [commentId]: nextValue };
+      });
+      return { ...prevLikes, [commentId]: nextLiked };
+    });
+  };
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -122,7 +142,7 @@ export function PostDetailScreen() {
 
       <View style={styles.flex}>
         <FlatList
-          data={comments}
+          data={sortedComments}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
@@ -133,23 +153,12 @@ export function PostDetailScreen() {
             },
           ]}
           renderItem={({ item }: { item: Comment }) => (
-            <View style={styles.commentRow}>
-              <Image
-                source={{ uri: item.author.avatarUrl }}
-                style={[
-                  styles.commentAvatar,
-                  { backgroundColor: theme.colors.borderSubtle, borderRadius: theme.radii.pill },
-                ]}
-              />
-              <View style={styles.commentBody}>
-                <Text style={[styles.commentAuthor, { color: theme.colors.textPrimary }]}>
-                  {item.author.displayName || item.author.username}
-                </Text>
-                <Text style={[styles.commentText, { color: theme.colors.textSecondary }]}>
-                  {item.text}
-                </Text>
-              </View>
-            </View>
+            <PostCommentItem
+              comment={item}
+              liked={Boolean(commentLikes[item.id])}
+              likeCount={commentLikeCounts[item.id] ?? 0}
+              onToggleLike={onToggleCommentLike}
+            />
           )}
           ListHeaderComponent={
             <View style={styles.card}>
@@ -205,12 +214,27 @@ export function PostDetailScreen() {
               </View>
 
               <View style={styles.commentsHeader}>
-                <Text style={[styles.commentsTitle, { color: theme.colors.textSubtle, fontFamily: 'manrope', fontWeight: '600'}]}>
+                <Text
+                  style={[
+                    styles.commentsTitle,
+                    { color: theme.colors.textSubtle, fontFamily: 'manrope', fontWeight: '600' },
+                  ]}>
                   {commentCountLabel}
                 </Text>
-                <Text style={[styles.commentsSort, { color: theme.colors.accentViolet, fontFamily: 'manrope', fontWeight: '600' }]}>
-                  Сначала новые
-                </Text>
+                <Pressable
+                  onPress={() =>
+                    setCommentsOrder((prev) => (prev === 'new' ? 'old' : 'new'))
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel="Переключить сортировку комментариев">
+                  <Text
+                    style={[
+                      styles.commentsSort,
+                      { color: theme.colors.accentViolet, fontFamily: 'manrope', fontWeight: '600' },
+                    ]}>
+                    {commentsOrder === 'new' ? 'Сначала новые' : 'Сначала старые'}
+                  </Text>
+                </Pressable>
               </View>
             </View>
           }
@@ -353,6 +377,7 @@ const styles = StyleSheet.create({
   },
   metaPill: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     minWidth: 63,
     height: 36,
@@ -386,28 +411,6 @@ const styles = StyleSheet.create({
   commentsSort: {
     fontSize: 13,
     fontWeight: '600',
-  },
-  commentRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    paddingVertical: 10,
-  },
-  commentAvatar: {
-    width: 32,
-    height: 32,
-  },
-  commentBody: {
-    flex: 1,
-    gap: 4,
-  },
-  commentAuthor: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  commentText: {
-    fontSize: 13,
-    lineHeight: 18,
   },
   commentsLoader: {
     paddingVertical: 16,
