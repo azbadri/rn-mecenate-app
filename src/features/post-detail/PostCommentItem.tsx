@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -8,6 +7,7 @@ import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon'
 import { HeartLikeWholeIcon } from '@/src/components/icons/HeartLikeWholeIcon';
 import { palette } from '@/src/globals';
 import { useLikeAnimation } from '@/src/hooks/useLikeAnimation';
+import { useLikeHaptics } from '@/src/hooks/useLikeHaptics';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
 type Props = {
@@ -25,10 +25,11 @@ export function PostCommentItem({ comment, liked, likeCount, onToggleLike }: Pro
     return isDark ? theme.colors.textSecondary : palette['gray-500'];
   }, [isDark, liked, theme.colors.textSecondary]);
   const { iconStyle, countStyle } = useLikeAnimation(likeCount);
+  const triggerLikeHaptic = useLikeHaptics('light');
 
   const onPressLike = () => {
     onToggleLike(comment.id);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    triggerLikeHaptic();
   };
 
   return (

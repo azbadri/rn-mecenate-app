@@ -45,7 +45,7 @@ function isPostDetailResponse(value: unknown) {
   return true;
 }
 
-function isLikeResponse(value: Record<string, unknown>) {
+function isLikeResponse(value: unknown) {
   if (!isRecord(value) || typeof value.ok !== 'boolean') return false;
   if (!value.ok) return true;
 
@@ -55,7 +55,7 @@ function isLikeResponse(value: Record<string, unknown>) {
   return true;
 }
 
-function isCommentsResponse(value: Record<string, unknown>) {
+function isCommentsResponse(value: unknown) {
   if (!isRecord(value) || typeof value.ok !== 'boolean') return false;
   if (!value.ok) return true;
 
@@ -70,7 +70,7 @@ function isCommentsResponse(value: Record<string, unknown>) {
   return true;
 }
 
-function isCommentCreatedResponse(value: Record<string, unknown>) {
+function isCommentCreatedResponse(value: unknown) {
   if (!isRecord(value) || typeof value.ok !== 'boolean') return false;
   if (!value.ok) return true;
 
@@ -85,6 +85,44 @@ function errorMessageFromBody(json: unknown): string | undefined {
   if (!isRecord(err)) return undefined;
   const msg = err.message;
   return typeof msg === 'string' ? msg : undefined;
+}
+
+async function parseJson(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (text.length === 0) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new ApiClientError('Некорректный ответ сервера', res.status);
+  }
+}
+
+function assertOkResponse<T extends { ok: boolean; data?: unknown }>(
+  res: Response,
+  json: unknown,
+  isResponse: (value: unknown) => value is T,
+): T['data'] {
+  if (!res.ok) {
+    throw new ApiClientError(
+      errorMessageFromBody(json) ?? `Ошибка ${res.status}`,
+      res.status,
+      json,
+    );
+  }
+  if (!isResponse(json)) {
+    throw new ApiClientError('Некорректный формат ответа', res.status, json);
+  }
+  if (!json.ok) {
+    throw new ApiClientError(
+      errorMessageFromBody(json) ?? 'Запрос не выполнен',
+      res.status,
+      json,
+    );
+  }
+  if (json.data == null) {
+    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
+  }
+  return json.data;
 }
 
 /** Одна страница ленты GET /posts (курсорная пагинация)*/
@@ -115,106 +153,22 @@ export async function fetchPostsPage(
   const path = `/posts?${qs}`;
 
   const res = await apiFetch(path);
-  const text = await res.text();
-
-  let json: unknown;
-  try {
-    json = text.length > 0 ? JSON.parse(text) : null;
-  } catch {
-    throw new ApiClientError('Некорректный ответ сервера', res.status);
-  }
-
-  if (!res.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? `Ошибка ${res.status}`,
-      res.status,
-      json,
-    );
-  }
-
-  if (!isPostsResponse(json)) {
-    throw new ApiClientError('Некорректный формат ответа', res.status, json);
-  }
-
-  if (!json.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? 'Запрос не выполнен',
-      res.status,
-      json,
-    );
-  }
-
-  if (json.data == null) {
-    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
-  }
-
-  return json.data;
+  const json = await parseJson(res);
+  return assertOkResponse(res, json, isPostsResponse) as PostsFeedData;
 }
 
 /** Детальный пост GET /posts/:id */
 export async function fetchPostDetail(id: string): Promise<PostDetailData> {
   const res = await apiFetch(`/posts/${id}`);
-  const text = await res.text();
-  let json;
-  try {
-    json = text.length > 0 ? JSON.parse(text) : null;
-  } catch {
-    throw new ApiClientError('Некорректный ответ сервера', res.status);
-  }
-  if (!res.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? `Ошибка ${res.status}`,
-      res.status,
-      json,
-    );
-  }
-  if (!isPostDetailResponse(json)) {
-    throw new ApiClientError('Некорректный формат ответа', res.status, json);
-  }
-  if (!json.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? 'Запрос не выполнен',
-      res.status,
-      json,
-    );
-  }
-  if (json.data == null) {
-    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
-  }
-  return json.data;
+  const json = await parseJson(res);
+  return assertOkResponse(res, json, isPostDetailResponse) as PostDetailData;
 }
 
 /** Toggle like POST /posts/:id/like */
 export async function togglePostLike(id: string): Promise<LikeData> {
   const res = await apiFetch(`/posts/${id}/like`, { method: 'POST' });
-  const text = await res.text();
-  let json;
-  try {
-    json = text.length > 0 ? JSON.parse(text) : null;
-  } catch {
-    throw new ApiClientError('Некорректный ответ сервера', res.status);
-  }
-  if (!res.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? `Ошибка ${res.status}`,
-      res.status,
-      json,
-    );
-  }
-  if (!isLikeResponse(json)) {
-    throw new ApiClientError('Некорректный формат ответа', res.status, json);
-  }
-  if (!json.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? 'Запрос не выполнен',
-      res.status,
-      json,
-    );
-  }
-  if (json.data == null) {
-    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
-  }
-  return json.data;
+  const json = await parseJson(res);
+  return assertOkResponse(res, json, isLikeResponse) as LikeData;
 }
 
 /** Комментарии GET /posts/:id/comments */
@@ -232,34 +186,8 @@ export async function fetchPostComments(
 
   const path = `/posts/${id}/comments?${search.toString()}`;
   const res = await apiFetch(path);
-  const text = await res.text();
-  let json: unknown;
-  try {
-    json = text.length > 0 ? JSON.parse(text) : null;
-  } catch {
-    throw new ApiClientError('Некорректный ответ сервера', res.status);
-  }
-  if (!res.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? `Ошибка ${res.status}`,
-      res.status,
-      json,
-    );
-  }
-  if (!isCommentsResponse(json)) {
-    throw new ApiClientError('Некорректный формат ответа', res.status, json);
-  }
-  if (!json.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? 'Запрос не выполнен',
-      res.status,
-      json,
-    );
-  }
-  if (json.data == null) {
-    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
-  }
-  return json.data;
+  const json = await parseJson(res);
+  return assertOkResponse(res, json, isCommentsResponse) as CommentsData;
 }
 
 /** Добавить комментарий POST /posts/:id/comments */
@@ -268,32 +196,6 @@ export async function createPostComment(id: string, text: string): Promise<Comme
     method: 'POST',
     body: JSON.stringify({ text }),
   });
-  const body = await res.text();
-  let json: unknown;
-  try {
-    json = body.length > 0 ? JSON.parse(body) : null;
-  } catch {
-    throw new ApiClientError('Некорректный ответ сервера', res.status);
-  }
-  if (!res.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? `Ошибка ${res.status}`,
-      res.status,
-      json,
-    );
-  }
-  if (!isCommentCreatedResponse(json)) {
-    throw new ApiClientError('Некорректный формат ответа', res.status, json);
-  }
-  if (!json.ok) {
-    throw new ApiClientError(
-      errorMessageFromBody(json) ?? 'Запрос не выполнен',
-      res.status,
-      json,
-    );
-  }
-  if (json.data == null) {
-    throw new ApiClientError('Данные отсутствуют в ответе', res.status, json);
-  }
-  return json.data;
+  const json = await parseJson(res);
+  return assertOkResponse(res, json, isCommentCreatedResponse) as CommentCreatedData;
 }

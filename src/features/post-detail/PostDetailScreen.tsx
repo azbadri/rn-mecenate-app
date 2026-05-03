@@ -15,7 +15,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import Animated from 'react-native-reanimated';
 
 import type { Comment } from '@/src/api/types';
@@ -29,6 +28,7 @@ import { usePostDetail } from '@/src/hooks/usePostDetail';
 import { useCreatePostComment, useTogglePostLike } from '@/src/hooks/usePostMutations';
 import { usePostRealtime } from '@/src/hooks/usePostRealtime';
 import { useLikeAnimation } from '@/src/hooks/useLikeAnimation';
+import { useLikeHaptics } from '@/src/hooks/useLikeHaptics';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 import { getRussianPlural } from '@/src/utils/pluralize';
 import { PostCommentItem } from './PostCommentItem';
@@ -63,6 +63,7 @@ export function PostDetailScreen() {
   const toggleLikeMutation = useTogglePostLike(id);
   const createCommentMutation = useCreatePostComment(id);
   const isDark = useColorScheme() === 'dark';
+  const triggerLikeHaptic = useLikeHaptics('medium');
 
   usePostRealtime(id, queryClient);
 
@@ -142,7 +143,7 @@ export function PostDetailScreen() {
 
   const onLikePress = () => {
     toggleLikeMutation.mutate();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    triggerLikeHaptic();
   };
 
   return (

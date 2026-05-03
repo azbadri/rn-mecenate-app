@@ -1,6 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics';
 import Animated from 'react-native-reanimated';
 import {
   Image,
@@ -16,6 +15,7 @@ import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFil
 import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
 import { palette } from '@/src/globals';
 import { useLikeAnimation } from '@/src/hooks/useLikeAnimation';
+import { useLikeHaptics } from '@/src/hooks/useLikeHaptics';
 import { useTogglePostLike } from '@/src/hooks/usePostMutations';
 import type { Theme } from '@/src/theme/tokens';
 
@@ -37,6 +37,7 @@ export function PostCard({ post, theme }: Props) {
   const { colors, spacing, radii: radius } = theme;
   const isDark = useColorScheme() === 'dark';
   const toggleLikeMutation = useTogglePostLike(post.id);
+  const triggerLikeHaptic = useLikeHaptics('medium');
   const pillNeutralBg = isDark ? colors.borderSubtle : palette['gray-100'];
   const likeInactiveFg = isDark ? colors.textSecondary : palette['gray-600'];
   const commentIconFg = isDark ? colors.textSecondary : palette['gray-500'];
@@ -58,7 +59,7 @@ export function PostCard({ post, theme }: Props) {
 
   const onLikePress = () => {
     toggleLikeMutation.mutate();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    triggerLikeHaptic();
   };
 
   return (
