@@ -27,7 +27,7 @@
 
 - **Node.js** 20+
 - **npm**
-- На телефоне: [**Expo Go**](https://expo.dev/go)
+- На телефоне: Expo Go
 
 ## Установка и запуск
 
@@ -39,7 +39,8 @@ npm run start
 В терминале Expo отсканировать QR-код в **Expo Go**
 
 Переменные окружения (опционально): скопировать `.env.example` в `.env`
-Нужна **`EXPO_PUBLIC_API_BASE_URL`** - базовый URL API, в коде по дефолту используется `https://k8s.mectest.ru/test-app`.
+Нужна **`EXPO_PUBLIC_API_BASE_URL`** - базовый URL API, 
+в коде по дефолту используется `https://k8s.mectest.ru/test-app`.
 
 ## Тесты
 
