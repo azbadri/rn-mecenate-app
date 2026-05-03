@@ -1,66 +1,32 @@
+import { useRouter } from 'expo-router';
+import { observer } from 'mobx-react-lite';
 import { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   ListRenderItem,
+  Pressable,
   RefreshControl,
   StyleSheet,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { observer } from 'mobx-react-lite';
 
 import type { Post } from '@/src/api/types';
 import { usePostsFeed } from '@/src/hooks/usePostsFeed';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
 import { FeedError } from './FeedError';
+import { FeedTopTabs } from './FeedTopTabs';
 import { PostCard } from './PostCard';
+import { useFeedTabs } from './useFeedTabs';
 
 const LIST_CONTENT_PADDING_BOTTOM = 24;
-
-function FeedTopTabsPlaceholder() {
-  const theme = useAppTheme();
-  const { colors, spacing, radii } = theme;
-
-  return (
-    <View
-      style={[
-        styles.topTabsBar,
-        {
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.md,
-          borderBottomColor: colors.border,
-          backgroundColor: colors.background,
-        },
-      ]}>
-      <View style={styles.topTabsRow}>
-        <View
-          style={[
-            styles.topTabSlot,
-            {
-              backgroundColor: colors.borderSubtle,
-              borderRadius: radii.pill,
-            },
-          ]}
-        />
-        <View
-          style={[
-            styles.topTabSlot,
-            {
-              backgroundColor: colors.borderSubtle,
-              borderRadius: radii.pill,
-            },
-          ]}
-        />
-      </View>
-    </View>
-  );
-}
 
 export const FeedScreen = observer(function FeedScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const {
     data,
     isError,
@@ -77,6 +43,8 @@ export const FeedScreen = observer(function FeedScreen() {
     [data],
   );
 
+  const { activeTab, setActiveTab, filteredPosts } = useFeedTabs(posts);
+
   const onRefresh = useCallback(() => refetch(), [refetch]);
 
   const onEndReached = useCallback(() => {
@@ -86,8 +54,24 @@ export const FeedScreen = observer(function FeedScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderItem: ListRenderItem<Post> = useCallback(
-    ({ item }) => <PostCard post={item} theme={theme} />,
-    [theme],
+    ({ item }) => {
+      const isPaid = item.tier === 'paid';
+      const onPress = () => {
+        if (isPaid) return;
+        router.push({ pathname: '/post/[id]', params: { id: item.id } });
+      };
+
+      return (
+        <Pressable
+          onPress={onPress}
+          disabled={isPaid}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть публикацию">
+          <PostCard post={item} theme={theme} />
+        </Pressable>
+      );
+    },
+    [router, theme],
   );
 
   const listFooter = useMemo(() => {
@@ -105,7 +89,7 @@ export const FeedScreen = observer(function FeedScreen() {
   if (isPending && posts.length === 0) {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: screenBg }]} edges={['top']}>
-        <FeedTopTabsPlaceholder />
+        <FeedTopTabs value={activeTab} onChange={setActiveTab} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={theme.colors.accent} />
         </View>
@@ -116,7 +100,7 @@ export const FeedScreen = observer(function FeedScreen() {
   if (isError && posts.length === 0) {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: screenBg }]} edges={['top']}>
-        <FeedTopTabsPlaceholder />
+        <FeedTopTabs value={activeTab} onChange={setActiveTab} />
         <FeedError theme={theme} onRetry={refetch} />
       </SafeAreaView>
     );
@@ -124,13 +108,10 @@ export const FeedScreen = observer(function FeedScreen() {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: screenBg }]} edges={['top']}>
-      {/** 
-       * // TODO: в дальнейшем здесь будет добавлена навигация по табам 
-       * <FeedTopTabsPlaceholder />
-       * */}
+      <FeedTopTabs value={activeTab} onChange={setActiveTab} />
       <FlatList
         style={styles.flex}
-        data={posts}
+        data={filteredPosts}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={[
@@ -156,19 +137,6 @@ export const FeedScreen = observer(function FeedScreen() {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-  },
-  topTabsBar: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  topTabsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  topTabSlot: {
-    flex: 1,
-    maxWidth: 120,
-    height: 36,
   },
   centered: {
     flex: 1,

@@ -1,5 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BlurView } from 'expo-blur';
+import Animated from 'react-native-reanimated';
 import {
   Image,
   Pressable,
@@ -13,6 +14,9 @@ import type { Post } from '@/src/api/types';
 import { CommentBubbleFilledIcon } from '@/src/components/icons/CommentBubbleFilledIcon';
 import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
 import { palette } from '@/src/globals';
+import { useLikeAnimation } from '@/src/hooks/useLikeAnimation';
+import { useLikeHaptics } from '@/src/hooks/useLikeHaptics';
+import { useTogglePostLike } from '@/src/hooks/usePostMutations';
 import type { Theme } from '@/src/theme/tokens';
 
 import {
@@ -32,6 +36,8 @@ const HIDDEN_BLUR = 80;
 export function PostCard({ post, theme }: Props) {
   const { colors, spacing, radii: radius } = theme;
   const isDark = useColorScheme() === 'dark';
+  const toggleLikeMutation = useTogglePostLike(post.id);
+  const triggerLikeHaptic = useLikeHaptics('medium');
   const pillNeutralBg = isDark ? colors.borderSubtle : palette['gray-100'];
   const likeInactiveFg = isDark ? colors.textSecondary : palette['gray-600'];
   const commentIconFg = isDark ? colors.textSecondary : palette['gray-500'];
@@ -46,6 +52,15 @@ export function PostCard({ post, theme }: Props) {
   const isLocked = isPaid || isDonation;
   const hasText =
     !isLocked && (Boolean(post.title) || (!isPaid && Boolean(post.preview || post.body)));
+
+  const { iconStyle: likeIconStyle, countStyle: likeCountStyle } = useLikeAnimation(
+    post.likesCount,
+  );
+
+  const onLikePress = () => {
+    toggleLikeMutation.mutate();
+    triggerLikeHaptic();
+  };
 
   return (
     <View
@@ -166,8 +181,11 @@ export function PostCard({ post, theme }: Props) {
             styles.metaRow,
             { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: 12, gap: spacing.sm },
           ]}>
-          <View
-            style={[
+          <Pressable
+            onPress={onLikePress}
+            accessibilityRole="button"
+            accessibilityLabel="Лайк"
+            style={({ pressed }) => [
               styles.metaPill,
               {
                 backgroundColor: likeBg,
@@ -176,13 +194,16 @@ export function PostCard({ post, theme }: Props) {
                 paddingLeft: 6,
                 paddingRight: 12,
                 gap: spacing.xs,
+                opacity: pressed ? 0.85 : 1,
               },
             ]}>
-            <View style={styles.metaIconBox}>
+            <Animated.View style={[styles.metaIconBox, likeIconStyle]}>
               <HeartLikeFilledIcon color={likeFg} size={16} />
-            </View>
-            <Text style={[styles.actionCount, { color: likeFg }]}>{post.likesCount}</Text>
-          </View>
+            </Animated.View>
+            <Animated.Text style={[styles.actionCount, { color: likeFg }, likeCountStyle]}>
+              {post.likesCount}
+            </Animated.Text>
+          </Pressable>
           <View
             style={[
               styles.metaPill,
