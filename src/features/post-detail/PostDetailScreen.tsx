@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -16,12 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import type { Comment } from '@/src/api/types';
 import { QueryNotFoundView } from '@/src/components/empty-states/QueryNotFoundView';
@@ -33,6 +28,7 @@ import { usePostComments } from '@/src/hooks/usePostComments';
 import { usePostDetail } from '@/src/hooks/usePostDetail';
 import { useCreatePostComment, useTogglePostLike } from '@/src/hooks/usePostMutations';
 import { usePostRealtime } from '@/src/hooks/usePostRealtime';
+import { useLikeAnimation } from '@/src/hooks/useLikeAnimation';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 import { getRussianPlural } from '@/src/utils/pluralize';
 import { PostCommentItem } from './PostCommentItem';
@@ -50,9 +46,6 @@ export function PostDetailScreen() {
   const [commentsOrder, setCommentsOrder] = useState<'new' | 'old'>('new');
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
   const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
-  const likeScale = useSharedValue(1);
-  const likeCountScale = useSharedValue(1);
-  const prevLikesRef = useRef<number | null>(null);
 
   const {
     data: post,
@@ -103,33 +96,9 @@ export function PostDetailScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!post) return;
-    if (prevLikesRef.current == null) {
-      prevLikesRef.current = post.likesCount;
-      return;
-    }
-
-    if (prevLikesRef.current !== post.likesCount) {
-      likeScale.value = withSequence(
-        withTiming(1.15, { duration: 140 }),
-        withTiming(1, { duration: 180 }),
-      );
-      likeCountScale.value = withSequence(
-        withTiming(1.2, { duration: 140 }),
-        withTiming(1, { duration: 180 }),
-      );
-      prevLikesRef.current = post.likesCount;
-    }
-  }, [likeCountScale, likeScale, post]);
-
-  const likeIconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: likeScale.value }],
-  }));
-
-  const likeCountStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: likeCountScale.value }],
-  }));
+  const { iconStyle: likeIconStyle, countStyle: likeCountStyle } = useLikeAnimation(
+    post?.likesCount ?? 0,
+  );
 
   if (isPostPending) {
     return (
