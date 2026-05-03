@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -15,6 +15,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 import type { Comment } from '@/src/api/types';
 import { QueryNotFoundView } from '@/src/components/empty-states/QueryNotFoundView';
@@ -43,6 +50,9 @@ export function PostDetailScreen() {
   const [commentsOrder, setCommentsOrder] = useState<'new' | 'old'>('new');
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
   const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
+  const likeScale = useSharedValue(1);
+  const likeCountScale = useSharedValue(1);
+  const prevLikesRef = useRef<number | null>(null);
 
   const {
     data: post,
@@ -93,6 +103,34 @@ export function PostDetailScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!post) return;
+    if (prevLikesRef.current == null) {
+      prevLikesRef.current = post.likesCount;
+      return;
+    }
+
+    if (prevLikesRef.current !== post.likesCount) {
+      likeScale.value = withSequence(
+        withTiming(1.15, { duration: 140 }),
+        withTiming(1, { duration: 180 }),
+      );
+      likeCountScale.value = withSequence(
+        withTiming(1.2, { duration: 140 }),
+        withTiming(1, { duration: 180 }),
+      );
+      prevLikesRef.current = post.likesCount;
+    }
+  }, [likeCountScale, likeScale, post]);
+
+  const likeIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likeScale.value }],
+  }));
+
+  const likeCountStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likeCountScale.value }],
+  }));
+
   if (isPostPending) {
     return (
       <SafeAreaView style={[styles.root, styles.centered, { backgroundColor: theme.colors.background }]}>
@@ -133,6 +171,11 @@ export function PostDetailScreen() {
     });
   };
 
+  const onLikePress = () => {
+    toggleLikeMutation.mutate();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+  };
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -149,6 +192,7 @@ export function PostDetailScreen() {
         <FlatList
           data={sortedComments}
           keyExtractor={(item) => item.id}
+          extraData={[commentLikes, commentLikeCounts]}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,
@@ -199,14 +243,16 @@ export function PostDetailScreen() {
 
               <View style={styles.metaRow}>
                 <Pressable
-                  onPress={() => toggleLikeMutation.mutate()}
+                  onPress={onLikePress}
                   style={[styles.metaPill, { backgroundColor: likeBg }]}
                   accessibilityRole="button"
                   accessibilityLabel="Лайк">
-                  <View style={styles.metaIconBox}>
+                  <Animated.View style={[styles.metaIconBox, likeIconStyle]}>
                     <HeartLikeFilledIcon color={likeFg} size={16} />
-                  </View>
-                  <Text style={[styles.actionCount, { color: likeFg }]}>{post.likesCount}</Text>
+                  </Animated.View>
+                  <Animated.Text style={[styles.actionCount, { color: likeFg }, likeCountStyle]}>
+                    {post.likesCount}
+                  </Animated.Text>
                 </Pressable>
                 <View style={[styles.metaPill, { backgroundColor: pillNeutralBg }]}>
                   <View style={styles.metaIconBox}>
