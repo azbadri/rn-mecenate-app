@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-
 
 import type { Comment } from '@/src/api/types';
 import { HeartLikeFilledIcon } from '@/src/components/icons/HeartLikeFilledIcon';
+import { HeartLikeWholeIcon } from '@/src/components/icons/HeartLikeWholeIcon';
 import { palette } from '@/src/globals';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
@@ -41,9 +42,9 @@ export function PostCommentItem({ comment, liked, likeCount, onToggleLike }: Pro
         accessibilityRole="button"
         accessibilityLabel="Лайк комментария"
         style={styles.likeButton}>
-        <HeartLikeFilledIcon color={iconColor} size={16} />
+        {!liked ? <HeartLikeFilledIcon color={iconColor} size={16} /> :  <HeartLikeWholeIcon color={iconColor} size={16} />}
         {likeCount > 0 ? (
-          <Text style={[styles.likeCount, { color: iconColor }]}>{likeCount}</Text>
+          <Text style={[styles.likeCount]}>{likeCount}</Text>
         ) : null}
       </Pressable>
     </View>

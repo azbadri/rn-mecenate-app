@@ -111,6 +111,8 @@ export function PostDetailScreen() {
   const likeBg = post.isLiked ? palette['rose-500'] : pillNeutralBg;
   const likeFg = post.isLiked ? palette.white : likeInactiveFg;
   const sendDisabled = commentText.trim().length === 0 || createCommentMutation.isPending;
+  const sendIconColor = sendDisabled ? theme.colors.iconMuted : palette['violet-600'];
+  
   const onSubmitComment = () => {
     const trimmed = commentText.trim();
     if (!trimmed || createCommentMutation.isPending) return;
@@ -276,8 +278,6 @@ export function PostDetailScreen() {
               styles.input,
               {
                 color: theme.colors.textPrimary,
-                // borderColor: theme.colors.borderSubtle,
-                // backgroundColor: theme.colors.background,
                 borderColor: theme.colors.background,
                 borderWidth: 2,
                 borderRadius: theme.radii.lg,
@@ -295,10 +295,10 @@ export function PostDetailScreen() {
               styles.sendButton,
               {
                 opacity: sendDisabled ? 0.5 : pressed ? 0.85 : 1,
-                color: sendDisabled ? theme.colors.accentViolet : theme.colors.iconMuted,
+                color: sendIconColor,
               },
             ]}>
-            <SendPlaneIcon />
+            <SendPlaneIcon color={sendIconColor} />
           </Pressable>
         </View>
       </View>
