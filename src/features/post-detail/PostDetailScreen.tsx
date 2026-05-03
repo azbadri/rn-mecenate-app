@@ -44,8 +44,9 @@ export function PostDetailScreen() {
   const [commentText, setCommentText] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [commentsOrder, setCommentsOrder] = useState<'new' | 'old'>('new');
-  const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
-  const [commentLikeCounts, setCommentLikeCounts] = useState<Record<string, number>>({});
+  const [commentLikeState, setCommentLikeState] = useState<
+    Record<string, { liked: boolean; count: number }>
+  >({});
 
   const {
     data: post,
@@ -130,14 +131,15 @@ export function PostDetailScreen() {
   };
 
   const onToggleCommentLike = (commentId: string) => {
-    setCommentLikes((prevLikes) => {
-      const nextLiked = !prevLikes[commentId];
-      setCommentLikeCounts((prevCounts) => {
-        const current = prevCounts[commentId] ?? 0;
-        const nextValue = nextLiked ? current + 1 : Math.max(0, current - 1);
-        return { ...prevCounts, [commentId]: nextValue };
-      });
-      return { ...prevLikes, [commentId]: nextLiked };
+    setCommentLikeState((prevState) => {
+      const current = prevState[commentId];
+      const nextLiked = !(current?.liked ?? false);
+      const currentCount = current?.count ?? 0;
+      const nextCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
+      return {
+        ...prevState,
+        [commentId]: { liked: nextLiked, count: nextCount },
+      };
     });
   };
 
@@ -162,7 +164,7 @@ export function PostDetailScreen() {
         <FlatList
           data={sortedComments}
           keyExtractor={(item) => item.id}
-          extraData={[commentLikes, commentLikeCounts]}
+          extraData={commentLikeState}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,
@@ -171,14 +173,17 @@ export function PostDetailScreen() {
                 INPUT_BAR_HEIGHT + theme.spacing.xl + Math.max(theme.spacing.md, insets.bottom),
             },
           ]}
-          renderItem={({ item }: { item: Comment }) => (
-            <PostCommentItem
-              comment={item}
-              liked={Boolean(commentLikes[item.id])}
-              likeCount={commentLikeCounts[item.id] ?? 0}
-              onToggleLike={onToggleCommentLike}
-            />
-          )}
+          renderItem={({ item }: { item: Comment }) => {
+            const localState = commentLikeState[item.id];
+            return (
+              <PostCommentItem
+                comment={item}
+                liked={localState?.liked ?? false}
+                likeCount={localState?.count ?? 0}
+                onToggleLike={onToggleCommentLike}
+              />
+            );
+          }}
           ListHeaderComponent={
             <View style={styles.card}>
               <View style={styles.authorRow}>
